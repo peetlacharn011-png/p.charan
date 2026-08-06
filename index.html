@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapido Bike Taxi - Arcade Rush Hour Game</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Header HUD -->
+    <header class="game-header">
+        <div class="brand-title">
+            <i class="fa-solid fa-motorcycle"></i> RAPIDO RUSH
+        </div>
+
+        <div class="hud-stats-bar">
+            <div class="stat-box">
+                <span class="stat-label">EARNINGS</span>
+                <span class="stat-value" id="hud-money">₹0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">PASSENGERS</span>
+                <span class="stat-value" id="hud-passengers">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">TIME LEFT</span>
+                <span class="stat-value" style="color:#00E5FF;" id="hud-timer">180s</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">RATING</span>
+                <span class="stat-value" style="color:var(--rapido-success);" id="hud-rating">⭐ 5.0</span>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-secondary" onclick="openGarageModal()" title="Rapido Garage">
+                <i class="fa-solid fa-store" style="color:var(--rapido-yellow);"></i> Garage
+            </button>
+            <button class="btn-secondary" id="btn-audio-toggle" onclick="toggleGameAudio()" title="Sound Toggle">
+                <i class="fa-solid fa-volume-high" id="audio-icon"></i>
+            </button>
+            <button class="btn-secondary" onclick="togglePauseGame()" title="Pause">
+                <i class="fa-solid fa-pause"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Canvas Game Viewport -->
+    <main class="canvas-wrapper">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Floating Navigation Compass HUD -->
+        <div class="nav-compass-container" id="nav-compass">
+            <div class="compass-arrow" id="compass-arrow-icon">
+                <i class="fa-solid fa-location-arrow"></i>
+            </div>
+            <div class="compass-text" id="compass-target-text">
+                Pickup Rahul • 120m
+            </div>
+        </div>
+
+        <!-- Bottom Speedometer & Controls HUD -->
+        <div class="bottom-hud">
+            <!-- Speed & Gauges -->
+            <div class="speedometer-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <div style="font-family:'Outfit'; font-size:28px; font-weight:900; color:var(--rapido-yellow);" id="hud-speed">0</div>
+                    <div style="font-size:11px; font-weight:700; color:var(--rapido-muted);">KM/H</div>
+                </div>
+
+                <div>
+                    <div class="meter-bar-label">
+                        <span>NITRO BOOST [SHIFT/SPACE]</span>
+                        <span id="nitro-pct-text">100%</span>
+                    </div>
+                    <div class="meter-track">
+                        <div class="meter-fill nitro" id="nitro-bar-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="meter-bar-label">
+                        <span>BIKE HEALTH</span>
+                        <span id="health-pct-text">100%</span>
+                    </div>
+                    <div class="meter-track">
+                        <div class="meter-fill health" id="health-bar-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Arcade On-Screen Touch Controls -->
+            <div class="arcade-dpad">
+                <div style="display:flex; flex-direction:column; gap:6px; align-items:center;">
+                    <button class="touch-btn" id="btn-touch-up" title="Accelerate"><i class="fa-solid fa-chevron-up"></i></button>
+                    <div style="display:flex; gap:6px;">
+                        <button class="touch-btn" id="btn-touch-left" title="Steer Left"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="touch-btn" id="btn-touch-down" title="Reverse/Brake"><i class="fa-solid fa-chevron-down"></i></button>
+                        <button class="touch-btn" id="btn-touch-right" title="Steer Right"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <button class="touch-btn nitro-btn" id="btn-touch-nitro" title="Nitro Boost">⚡</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Start / Splash Overlay -->
+    <div class="modal-overlay active" id="start-game-modal">
+        <div class="modal-card">
+            <div style="background:var(--rapido-yellow); color:#000; width:70px; height:70px; border-radius:50%; display:grid; place-items:center; margin:0 auto 16px; font-size:36px; font-weight:900; box-shadow:0 0 25px var(--rapido-yellow-glow);">
+                <i class="fa-solid fa-motorcycle"></i>
+            </div>
+            <h2 style="font-family:'Outfit'; font-size:32px; font-weight:900; margin-bottom:6px;">RAPIDO BIKE RUSH</h2>
+            <p style="font-size:14px; color:var(--rapido-muted); margin-bottom:20px;">
+                Pick up passengers, dodge city traffic, and race to destination checkpoints before time runs out!
+            </p>
+
+            <div style="background:var(--rapido-surface); padding:14px; border-radius:12px; font-size:13px; text-align:left; margin-bottom:24px;">
+                <div style="margin-bottom:6px;"><i class="fa-solid fa-keyboard" style="color:var(--rapido-yellow);"></i> <b>Drive Controls:</b> W/A/S/D or Arrow Keys</div>
+                <div style="margin-bottom:6px;"><i class="fa-solid fa-bolt" style="color:var(--rapido-accent);"></i> <b>Nitro Boost:</b> Spacebar or Shift key</div>
+                <div><i class="fa-solid fa-shield-cat" style="color:var(--rapido-success);"></i> <b>Goal:</b> Serve max passengers in 3 mins!</div>
+            </div>
+
+            <button class="btn-primary" onclick="startGameLoop()">
+                <i class="fa-solid fa-play"></i> START PLAYING NOW
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Summary Modal -->
+    <div class="modal-overlay" id="game-over-modal">
+        <div class="modal-card">
+            <i class="fa-solid fa-trophy" style="font-size:48px; color:var(--rapido-yellow); margin-bottom:12px;"></i>
+            <h2 style="font-family:'Outfit'; font-size:28px; font-weight:900; margin-bottom:4px;">SHIFT COMPLETED!</h2>
+            <p style="font-size:13px; color:var(--rapido-muted); margin-bottom:18px;">Great work Captain! Here is your shift summary:</p>
+
+            <div style="background:var(--rapido-surface); padding:16px; border-radius:12px; margin-bottom:20px; text-align:left;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px;">
+                    <span style="color:var(--rapido-muted);">Total Earnings</span>
+                    <span style="font-weight:800; color:var(--rapido-yellow);" id="final-earnings">₹0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px;">
+                    <span style="color:var(--rapido-muted);">Passengers Dropped</span>
+                    <span style="font-weight:800;" id="final-passengers">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;">
+                    <span style="color:var(--rapido-muted);">Final Driver Rating</span>
+                    <span style="font-weight:800; color:var(--rapido-success);" id="final-rating">⭐ 5.0</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="restartGame()">
+                <i class="fa-solid fa-rotate-right"></i> PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- Garage Upgrades Modal -->
+    <div class="modal-overlay" id="garage-modal">
+        <div class="modal-card" style="width:520px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="font-family:'Outfit'; font-size:24px; font-weight:900;"><i class="fa-solid fa-store" style="color:var(--rapido-yellow);"></i> Rapido Garage</h3>
+                <button class="btn-secondary" style="padding:4px 10px;" onclick="closeGarageModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="garage-grid">
+                <div class="garage-card equipped" id="bike-card-standard" onclick="equipBike('standard')">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="fa-solid fa-motorcycle" style="font-size:24px; color:var(--rapido-yellow);"></i>
+                        <div style="text-align:left;">
+                            <div style="font-weight:800;">Rapido Classic Bike</div>
+                            <div style="font-size:11px; color:var(--rapido-muted);">Top Speed: 90 km/h • Standard</div>
+                        </div>
+                    </div>
+                    <span style="font-size:12px; font-weight:800; color:var(--rapido-success);">EQUIPPED</span>
+                </div>
+
+                <div class="garage-card" id="bike-card-ev" onclick="buyOrEquipBike('ev', 400)">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="fa-solid fa-bolt" style="font-size:24px; color:var(--rapido-accent);"></i>
+                        <div style="text-align:left;">
+                            <div style="font-weight:800;">Rapido EV Speed</div>
+                            <div style="font-size:11px; color:var(--rapido-muted);">Top Speed: 110 km/h • Instant Nitro</div>
+                        </div>
+                    </div>
+                    <span style="font-size:13px; font-weight:800; color:var(--rapido-yellow);" id="btn-text-ev">UNLOCKED</span>
+                </div>
+
+                <div class="garage-card" id="bike-card-hyper" onclick="buyOrEquipBike('hyper', 800)">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="fa-solid fa-fire" style="font-size:24px; color:var(--rapido-danger);"></i>
+                        <div style="text-align:left;">
+                            <div style="font-weight:800;">Rapido Hyper Superbike</div>
+                            <div style="font-size:11px; color:var(--rapido-muted);">Top Speed: 135 km/h • Max Acceleration</div>
+                        </div>
+                    </div>
+                    <span style="font-size:13px; font-weight:800; color:var(--rapido-yellow);" id="btn-text-hyper">UNLOCKED</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="closeGarageModal()">BACK TO GAME</button>
+        </div>
+    </div>
+
+    <!-- Audio Manager Script -->
+    <script src="sound.js"></script>
+    <!-- Game Core Logic -->
+    <script src="game.js"></script>
+</body>
+</html>
